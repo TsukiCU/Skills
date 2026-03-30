@@ -9,7 +9,11 @@
       "Bash(git checkout:*)",
       "Bash(npm i:*)",
       "Bash(npx shadcn@latest add dropdown-menu avatar)",
-      "Bash(ls eslint.config*)"
+      "Bash(ls eslint.config*)",
+      "Bash(npm ls:*)",
+      "Bash(npm info:*)",
+      "Bash(node -e \"const v=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\); const arr=JSON.parse\\(v\\); console.log\\(arr.slice\\(-10\\).join\\(''''\\\\n''''\\)\\)\")",
+      "Bash(npm install:*)"
     ]
   }
 }
