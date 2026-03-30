@@ -4,7 +4,12 @@
       "Bash(npm run:*)",
       "Bash(git init:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)",
+      "Bash(npm i:*)",
+      "Bash(npx shadcn@latest add dropdown-menu avatar)",
+      "Bash(ls eslint.config*)"
     ]
   }
 }
