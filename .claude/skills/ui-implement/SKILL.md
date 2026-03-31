@@ -31,6 +31,7 @@ Modifying:
   src/components/layout/Sidebar.tsx      — add nav item
 ```
 Get user confirmation before proceeding. Then implement all files.
+If the user's instruction already specifies what to build in detail, skip confirmation and proceed directly. Only ask for confirmation when the requirements are ambiguous or the scope is unclear.
 
 ### 3. Implementation Checklist
 For every page/component you create, ensure:
