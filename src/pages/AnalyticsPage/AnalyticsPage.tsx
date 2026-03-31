@@ -47,6 +47,12 @@ const MEMBER_HEX: Record<string, string> = {
   "member-4": "#f59e0b", // amber-500
 }
 
+// --primary is defined as oklch(...) in this project, so `hsl(var(--primary))` produces
+// `hsl(oklch(...))` which is invalid CSS and renders as transparent in SVG attributes.
+// SVG presentation attributes (stroke=, fill=, stopColor=) cannot resolve CSS custom
+// properties at all — only SVG style="" attributes can. Use a hardcoded hex instead.
+const PRIMARY_TEAL = "#14b8a6"
+
 const PRIORITY_ORDER: TaskPriority[] = ["urgent", "high", "medium", "low"]
 const PRIORITY_LABELS: Record<TaskPriority, string> = {
   urgent: "Urgent",
@@ -64,6 +70,10 @@ const TOOLTIP_STYLE = {
   boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
   padding: "8px 12px",
 }
+
+// Recharts wraps contentStyle in its own div with a default white background.
+// Setting background:transparent here ensures only contentStyle controls the look.
+const TOOLTIP_WRAPPER_STYLE = { outline: "none", background: "transparent" }
 
 // Recharts renders SVG <text> elements using inline 'fill' presentation attributes.
 // CSS presentation attributes don't support CSS custom properties, but CSS stylesheet
@@ -249,7 +259,7 @@ export function AnalyticsPage() {
                   contentStyle={TOOLTIP_STYLE}
                   cursor={false}
                   offset={8}
-                  wrapperStyle={{ outline: "none" }}
+                  wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -289,9 +299,11 @@ export function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
                 <defs>
+                  {/* Use hardcoded hex — hsl(var(--primary)) is invalid in SVG attributes
+                      because --primary is an oklch value, not an hsl channel tuple */}
                   <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor={PRIMARY_TEAL} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={PRIMARY_TEAL} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} vertical={false} />
@@ -312,16 +324,16 @@ export function AnalyticsPage() {
                   labelStyle={{ color: "hsl(var(--foreground))" }}
                   cursor={false}
                   offset={8}
-                  wrapperStyle={{ outline: "none" }}
+                  wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                 />
                 <Area
                   type="monotone"
                   dataKey="completed"
-                  stroke="hsl(var(--primary))"
+                  stroke={PRIMARY_TEAL}
                   strokeWidth={2}
                   fill="url(#completedGradient)"
-                  dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
-                  activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
+                  dot={{ r: 3, fill: PRIMARY_TEAL, strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: PRIMARY_TEAL }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -331,11 +343,12 @@ export function AnalyticsPage() {
         {/* Priority Breakdown */}
         <ChartCard title="Priority Breakdown" delay={0.3}>
           <div className={cn(CHART_WRAPPER, "text-muted-foreground")}>
+            {/* bottom: 16 gives room for the "tasks" axis label to avoid clipping */}
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={priorityData}
                 layout="vertical"
-                margin={{ top: 0, right: 12, bottom: 0, left: 8 }}
+                margin={{ top: 0, right: 12, bottom: 16, left: 8 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.15} vertical={true} horizontal={false} />
                 <XAxis
@@ -358,7 +371,7 @@ export function AnalyticsPage() {
                   contentStyle={TOOLTIP_STYLE}
                   cursor={false}
                   offset={8}
-                  wrapperStyle={{ outline: "none" }}
+                  wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                 />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24} background={{ fill: "transparent" }}>
                   {priorityData.map((entry) => (
@@ -373,11 +386,12 @@ export function AnalyticsPage() {
         {/* Team Workload */}
         <ChartCard title="Team Workload" delay={0.35}>
           <div className={cn(CHART_WRAPPER, "text-muted-foreground")}>
+            {/* bottom: 16 gives room for the "tasks" axis label to avoid clipping */}
             <ResponsiveContainer width="100%" height={200}>
               <BarChart
                 data={workloadData}
                 layout="vertical"
-                margin={{ top: 0, right: 32, bottom: 0, left: 8 }}
+                margin={{ top: 0, right: 32, bottom: 16, left: 8 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.15} vertical={true} horizontal={false} />
                 <XAxis
@@ -409,7 +423,7 @@ export function AnalyticsPage() {
                   }}
                   cursor={false}
                   offset={8}
-                  wrapperStyle={{ outline: "none" }}
+                  wrapperStyle={TOOLTIP_WRAPPER_STYLE}
                 />
                 <Bar dataKey="tasks" radius={[0, 4, 4, 0]} maxBarSize={24}>
                   {workloadData.map((entry) => (
