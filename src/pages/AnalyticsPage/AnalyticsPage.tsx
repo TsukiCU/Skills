@@ -58,11 +58,20 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 const TOOLTIP_STYLE = {
   backgroundColor: "hsl(var(--card))",
   border: "1px solid hsl(var(--border))",
-  borderRadius: "6px",
+  borderRadius: "8px",
   fontSize: "12px",
   color: "hsl(var(--foreground))",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+  boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+  padding: "8px 12px",
 }
+
+// Recharts renders SVG <text> elements using inline 'fill' presentation attributes.
+// CSS presentation attributes don't support CSS custom properties, but CSS stylesheet
+// rules do — and CSS rules take precedence over presentation attributes.
+// [&_.recharts-text]:fill-current tells Tailwind to emit:
+//   .wrapper .recharts-text { fill: currentColor }
+// which overrides the inline attribute, so the text inherits the wrapper's CSS color.
+const CHART_WRAPPER = "[&_.recharts-text]:fill-current"
 
 type TrendRange = "4W" | "8W" | "All"
 
@@ -220,28 +229,31 @@ export function AnalyticsPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* Status Distribution */}
         <ChartCard title="Status Distribution" delay={0.2}>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                cx="50%"
-                cy="45%"
-                innerRadius={55}
-                outerRadius={85}
-                paddingAngle={3}
-                dataKey="value"
-              >
-                {statusData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} stroke="transparent" />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={TOOLTIP_STYLE}
-                offset={8}
-                wrapperStyle={{ outline: "none" }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className={cn(CHART_WRAPPER, "text-muted-foreground")}>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={statusData}
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                  dataKey="value"
+                >
+                  {statusData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} stroke="transparent" />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  cursor={false}
+                  offset={8}
+                  wrapperStyle={{ outline: "none" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-1">
             {statusData.map((d) => (
               <div key={d.name} className="flex items-center gap-1.5">
@@ -273,136 +285,145 @@ export function AnalyticsPage() {
               </button>
             ))}
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-              <defs>
-                <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} vertical={false} />
-              <XAxis
-                dataKey="week"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={TOOLTIP_STYLE}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
-                offset={8}
-                wrapperStyle={{ outline: "none" }}
-              />
-              <Area
-                type="monotone"
-                dataKey="completed"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                fill="url(#completedGradient)"
-                dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
-                activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className={cn(CHART_WRAPPER, "text-muted-foreground")}>
+            <ResponsiveContainer width="100%" height={220}>
+              <AreaChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                <defs>
+                  <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} vertical={false} />
+                <XAxis
+                  dataKey="week"
+                  tick={{ fontSize: 11, fill: "currentColor" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: "currentColor" }}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  labelStyle={{ color: "hsl(var(--foreground))" }}
+                  cursor={false}
+                  offset={8}
+                  wrapperStyle={{ outline: "none" }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="completed"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="url(#completedGradient)"
+                  dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "hsl(var(--primary))" }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         {/* Priority Breakdown */}
         <ChartCard title="Priority Breakdown" delay={0.3}>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={priorityData}
-              layout="vertical"
-              margin={{ top: 0, right: 12, bottom: 0, left: 8 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} horizontal={false} />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                width={52}
-              />
-              <Tooltip
-                contentStyle={TOOLTIP_STYLE}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                offset={8}
-                wrapperStyle={{ outline: "none" }}
-              />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24} background={{ fill: "transparent" }}>
-                {priorityData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <div className={cn(CHART_WRAPPER, "text-muted-foreground")}>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={priorityData}
+                layout="vertical"
+                margin={{ top: 0, right: 12, bottom: 0, left: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.15} vertical={true} horizontal={false} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "currentColor" }}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
+                  label={{ value: "tasks", position: "insideBottomRight", offset: -4, fontSize: 10, fill: "currentColor" }}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 12, fill: "currentColor" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={52}
+                />
+                <Tooltip
+                  contentStyle={TOOLTIP_STYLE}
+                  cursor={false}
+                  offset={8}
+                  wrapperStyle={{ outline: "none" }}
+                />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24} background={{ fill: "transparent" }}>
+                  {priorityData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         {/* Team Workload */}
         <ChartCard title="Team Workload" delay={0.35}>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={workloadData}
-              layout="vertical"
-              margin={{ top: 0, right: 32, bottom: 0, left: 8 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} horizontal={false} />
-              <XAxis
-                type="number"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="name"
-                tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                width={44}
-              />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null
-                  const d = workloadData.find((w) => w.name === payload[0].payload.name)
-                  return (
-                    <div style={TOOLTIP_STYLE} className="px-2.5 py-1.5">
-                      <p className="font-medium">{d?.fullName}</p>
-                      <p className="text-muted-foreground">{payload[0].value} tasks</p>
-                    </div>
-                  )
-                }}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
-                offset={8}
-                wrapperStyle={{ outline: "none" }}
-              />
-              <Bar dataKey="tasks" radius={[0, 4, 4, 0]} maxBarSize={24}>
-                {workloadData.map((entry) => (
-                  <Cell key={entry.name} fill={entry.color} />
-                ))}
-                <LabelList
-                  dataKey="tasks"
-                  position="right"
-                  style={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+          <div className={cn(CHART_WRAPPER, "text-muted-foreground")}>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={workloadData}
+                layout="vertical"
+                margin={{ top: 0, right: 32, bottom: 0, left: 8 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.15} vertical={true} horizontal={false} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: "currentColor" }}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
+                  label={{ value: "tasks", position: "insideBottomRight", offset: -4, fontSize: 10, fill: "currentColor" }}
                 />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  tick={{ fontSize: 12, fill: "currentColor" }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={44}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const d = workloadData.find((w) => w.name === payload[0].payload.name)
+                    return (
+                      <div style={TOOLTIP_STYLE}>
+                        <p className="font-medium">{d?.fullName}</p>
+                        <p className="text-muted-foreground">{payload[0].value} tasks</p>
+                      </div>
+                    )
+                  }}
+                  cursor={false}
+                  offset={8}
+                  wrapperStyle={{ outline: "none" }}
+                />
+                <Bar dataKey="tasks" radius={[0, 4, 4, 0]} maxBarSize={24}>
+                  {workloadData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
+                  ))}
+                  <LabelList
+                    dataKey="tasks"
+                    position="right"
+                    style={{ fontSize: 11, fill: "currentColor", fontWeight: 500 }}
+                  />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
       </div>
     </div>
