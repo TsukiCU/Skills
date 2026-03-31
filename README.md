@@ -13,6 +13,7 @@ A single-page project management dashboard built with React and TypeScript. Feat
 - **Collapsible sidebar** — animates 240px ↔ 64px with Framer Motion; active nav highlight
 - **Dark / light / system theme** — persisted to localStorage, controls `documentElement.classList`
 - **Analytics page** — 4 stat cards (total tasks, completed %, overdue count, avg completion time) with staggered Framer Motion entrance; 4 interactive Recharts charts: status distribution donut, weekly completion area chart, priority breakdown horizontal bar, team workload horizontal bar; all charts adapt to dark mode via CSS variables; real data computed from task store
+- **Settings page** — 4-section vertical tab nav (Profile, Appearance, Notifications, Integrations); sticky "Unsaved changes" bar with 500ms simulated save and discard; email validation; accent color swatches; theme mode selector; font density picker; grouped notification toggles; integration connection cards for GitHub, Slack, Notion; all settings persisted via Zustand + localStorage
 - **Responsive layout** — horizontal scroll for Kanban on small screens
 
 ## Tech Stack
