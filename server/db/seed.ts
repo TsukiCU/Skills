@@ -2,8 +2,6 @@ import "./migrate"
 import { db } from "./index"
 import { tasks, members, settings } from "./schema"
 
-const now = new Date().toISOString()
-
 const MEMBERS = [
   { id: "member-1", name: "Alice Chen",   avatar: "AC", color: "bg-teal-500" },
   { id: "member-2", name: "Bob Martinez", avatar: "BM", color: "bg-violet-500" },
@@ -37,55 +35,62 @@ const TASKS = [
   { id: "task-18", title: "Zustand store architecture", description: "Set up taskStore, uiStore, and themeStore with proper TypeScript types. Add persist middleware for theme. Document store shape in inline JSDoc.", status: "done", priority: "medium", assigneeId: "member-3", dueDate: "2026-03-18", createdAt: "2026-03-08", tags: ["state", "architecture"], sortOrder: 2 },
 ]
 
-// Clear existing data
-db.delete(tasks).run()
-db.delete(members).run()
-db.delete(settings).run()
+export function runSeed() {
+  const now = new Date().toISOString()
 
-// Seed members
-for (const m of MEMBERS) {
-  db.insert(members).values({ ...m, createdAt: now, updatedAt: now }).run()
-}
+  // Clear existing data
+  db.delete(tasks).run()
+  db.delete(members).run()
+  db.delete(settings).run()
 
-// Seed tasks
-for (const t of TASKS) {
-  db.insert(tasks).values({
-    id: t.id,
-    title: t.title,
-    description: t.description,
-    status: t.status,
-    priority: t.priority,
-    assigneeId: t.assigneeId,
-    dueDate: t.dueDate,
-    tags: JSON.stringify(t.tags),
-    sortOrder: t.sortOrder,
-    createdAt: t.createdAt,
+  // Seed members
+  for (const m of MEMBERS) {
+    db.insert(members).values({ ...m, createdAt: now, updatedAt: now }).run()
+  }
+
+  // Seed tasks
+  for (const t of TASKS) {
+    db.insert(tasks).values({
+      id: t.id,
+      title: t.title,
+      description: t.description,
+      status: t.status,
+      priority: t.priority,
+      assigneeId: t.assigneeId,
+      dueDate: t.dueDate,
+      tags: JSON.stringify(t.tags),
+      sortOrder: t.sortOrder,
+      createdAt: t.createdAt,
+      updatedAt: now,
+    }).run()
+  }
+
+  // Seed default settings
+  db.insert(settings).values({
+    id: "user",
+    name: "Alice Chen",
+    email: "alice@taskflow.app",
+    bio: "Product manager & team lead. Building great products one task at a time.",
+    accentColor: "#14b8a6",
+    fontSize: "md",
+    notifications: JSON.stringify({
+      emailTaskAssigned: true,
+      emailDeadlineReminders: true,
+      emailProjectUpdates: false,
+      pushNewComments: true,
+      pushStatusChanges: false,
+      desktopAll: true,
+    }),
+    integrations: JSON.stringify({
+      github: "connected",
+      slack: "disconnected",
+      notion: "disconnected",
+    }),
     updatedAt: now,
   }).run()
+
+  console.log(`Seeded: ${MEMBERS.length} members, ${TASKS.length} tasks, 1 settings record`)
 }
 
-// Seed default settings
-db.insert(settings).values({
-  id: "user",
-  name: "Alice Chen",
-  email: "alice@taskflow.app",
-  bio: "Product manager & team lead. Building great products one task at a time.",
-  accentColor: "#14b8a6",
-  fontSize: "md",
-  notifications: JSON.stringify({
-    emailTaskAssigned: true,
-    emailDeadlineReminders: true,
-    emailProjectUpdates: false,
-    pushNewComments: true,
-    pushStatusChanges: false,
-    desktopAll: true,
-  }),
-  integrations: JSON.stringify({
-    github: "connected",
-    slack: "disconnected",
-    notion: "disconnected",
-  }),
-  updatedAt: now,
-}).run()
-
-console.log(`Seeded: ${MEMBERS.length} members, ${TASKS.length} tasks, 1 settings record`)
+// Allow running directly: tsx server/db/seed.ts
+runSeed()

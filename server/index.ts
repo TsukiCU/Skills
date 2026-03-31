@@ -6,6 +6,7 @@ import "./db/migrate"
 import { tasksRouter } from "./routes/tasks"
 import { membersRouter } from "./routes/members"
 import { settingsRouter } from "./routes/settings"
+import { runSeed } from "./db/seed"
 
 const app = new Hono()
 
@@ -22,6 +23,11 @@ app.route("/api/members", membersRouter)
 app.route("/api/settings", settingsRouter)
 
 app.get("/api/health", (c) => c.json({ status: "ok" }))
+
+app.post("/api/seed-reset", (c) => {
+  runSeed()
+  return c.json({ data: { ok: true } })
+})
 
 const PORT = 3001
 serve({ fetch: app.fetch, port: PORT }, () => {

@@ -55,6 +55,7 @@ export function TaskCard({ task, isDragging = false }: TaskCardProps) {
       role="button"
       tabIndex={0}
       aria-label={`Open task: ${task.title}`}
+      data-testid={`task-card-${task.id}`}
       onClick={() => openDrawer(task.id)}
       onKeyDown={(e) => e.key === "Enter" && openDrawer(task.id)}
       className={cn(

@@ -81,7 +81,7 @@ export function NewTaskDialog() {
     <Dialog open={open} onOpenChange={(o: boolean) => { if (!o) resetAndClose(); else setOpen(true) }}>
       <DialogTrigger
         render={
-          <Button size="sm" className="gap-1.5">
+          <Button size="sm" className="gap-1.5" data-testid="new-task-btn">
             <Plus className="h-4 w-4" />
             New Task
           </Button>
@@ -104,6 +104,7 @@ export function NewTaskDialog() {
               placeholder="Task title"
               aria-invalid={titleError}
               className={titleError ? "border-destructive" : ""}
+              data-testid="new-task-title"
             />
             {titleError && (
               <p className="text-xs text-destructive">Title is required</p>
@@ -120,6 +121,7 @@ export function NewTaskDialog() {
               placeholder="Optional description"
               rows={3}
               className="resize-none"
+              data-testid="new-task-description"
             />
           </div>
 
@@ -128,7 +130,7 @@ export function NewTaskDialog() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Status</label>
               <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
-                <SelectTrigger className="w-full" aria-label="Status">
+                <SelectTrigger className="w-full" aria-label="Status" data-testid="new-task-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,7 +145,7 @@ export function NewTaskDialog() {
             <div className="space-y-1.5">
               <label className="text-sm font-medium">Priority</label>
               <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
-                <SelectTrigger className="w-full" aria-label="Priority">
+                <SelectTrigger className="w-full" aria-label="Priority" data-testid="new-task-priority">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,7 +163,7 @@ export function NewTaskDialog() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Assignee</label>
             <Select value={assigneeId} onValueChange={(v) => { if (v) setAssigneeId(v) }}>
-              <SelectTrigger className="w-full" aria-label="Assignee">
+              <SelectTrigger className="w-full" aria-label="Assignee" data-testid="new-task-assignee">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -182,6 +184,7 @@ export function NewTaskDialog() {
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="frontend, bug, api (comma-separated)"
+              data-testid="new-task-tags"
             />
           </div>
 
@@ -189,7 +192,7 @@ export function NewTaskDialog() {
             <Button type="button" variant="outline" size="sm" onClick={resetAndClose}>
               Cancel
             </Button>
-            <Button type="submit" size="sm">
+            <Button type="submit" size="sm" data-testid="new-task-submit">
               Create Task
             </Button>
           </DialogFooter>

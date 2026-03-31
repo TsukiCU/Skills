@@ -90,6 +90,7 @@ export function DetailDrawer() {
                       onBlur={handleTitleBlur}
                       className="border-0 px-0 text-base font-semibold focus-visible:ring-0 h-auto py-0"
                       aria-label="Task title"
+                      data-testid="drawer-task-title"
                     />
                   </div>
                   <Button
@@ -114,6 +115,7 @@ export function DetailDrawer() {
                       <button
                         key={s}
                         onClick={() => updateTask(task.id, { status: s })}
+                        data-testid={`drawer-status-${s}`}
                         className={cn(
                           "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-100",
                           "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -137,6 +139,7 @@ export function DetailDrawer() {
                       <button
                         key={p}
                         onClick={() => updateTask(task.id, { priority: p })}
+                        data-testid={`drawer-priority-${p}`}
                         className={cn(
                           "rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-100",
                           "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -243,6 +246,7 @@ export function DetailDrawer() {
                   size="sm"
                   onClick={() => setDeleteOpen(true)}
                   className="gap-1.5"
+                  data-testid="drawer-delete-btn"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete task
@@ -266,7 +270,7 @@ export function DetailDrawer() {
             <Button variant="outline" size="sm" onClick={() => setDeleteOpen(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" size="sm" onClick={handleDelete}>
+            <Button variant="destructive" size="sm" onClick={handleDelete} data-testid="confirm-delete-btn">
               Delete
             </Button>
           </DialogFooter>

@@ -54,6 +54,7 @@ export function KanbanToolbar() {
           placeholder="Search tasks…"
           className="pl-8 h-8 text-sm"
           aria-label="Search tasks"
+          data-testid="search-input"
         />
       </div>
 
@@ -64,6 +65,7 @@ export function KanbanToolbar() {
             key={value}
             onClick={() => togglePriority(value)}
             aria-pressed={priorityFilter.includes(value)}
+            data-testid={`priority-filter-${value}`}
             className={cn(
               "rounded-md px-2.5 py-1 text-xs font-medium border transition-all duration-100",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -86,6 +88,7 @@ export function KanbanToolbar() {
             title={m.name}
             aria-pressed={assigneeFilter.includes(m.id)}
             aria-label={`Filter by ${m.name}`}
+            data-testid={`assignee-filter-${m.id}`}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold text-white transition-all duration-100",
               m.color,

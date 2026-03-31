@@ -71,6 +71,34 @@ npm run dev           # starts both Vite (5173) and Hono server (3001)
 | `npm run preview` | Preview production build |
 | `npm run lint` | ESLint check |
 | `npm run type-check` | TypeScript check (`tsc --noEmit`) |
+| `npm run test:e2e` | Run Playwright E2E tests |
+| `npm run test:e2e:ui` | Open Playwright UI mode |
+
+## E2E Testing
+
+Playwright tests cover the core Kanban CRUD flows. Both servers must be running (or the `webServer` config will start them automatically).
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Watch mode with browser visible
+npm run test:e2e:ui
+
+# Run a single spec
+npx playwright test e2e/kanban.spec.ts
+```
+
+**Test coverage in `e2e/kanban.spec.ts`:**
+- Create task: opens dialog, fills title + priority, submits, verifies card appears in column
+- Validation: empty title shows error, dialog stays open
+- Read: seeded task counts per column, search filter, priority filter toggle
+- Update priority: opens drawer, changes priority chip, card badge updates
+- Update status: moves task to different column via status chip
+- Delete: confirms deletion, task removed, count decremented
+- Cancel delete: dialog dismissed, task count unchanged
+
+**Test isolation:** each test calls `POST /api/seed-reset` to restore the DB to known seed state before running.
 
 ## Project Structure
 
