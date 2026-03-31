@@ -1,22 +1,25 @@
 # TaskFlow
 
-A single-page project management dashboard built with React and TypeScript. Currently features a fully functional app shell with sidebar navigation, theme switching, and placeholder pages for Kanban, Analytics, and Settings — serving as the foundation for a full-featured PM tool.
+A single-page project management dashboard built with React and TypeScript. Features a full Kanban board with drag-and-drop, a detail drawer, real-time filters, and a persistent dark/light theme.
 
 ## Current Features
 
-- **Collapsible sidebar** — animates between 240px (full) and 64px (icon-only) using Framer Motion; shows logo, nav links with active highlight, and user avatar
-- **Three pages** — Kanban, Analytics, Settings (placeholder content, routing wired up)
-- **Dark / light theme toggle** — persisted to localStorage via Zustand; controls `document.documentElement.classList` for shadcn dark mode
-- **Route-based navigation** — `/` redirects to `/kanban`; active nav item highlighted; page title in header updates per route
-- **Header** — page title, ⌘K command palette trigger, notification bell, theme dropdown, user avatar menu
-- **Responsive layout** — full-bleed app shell, sidebar + main content flex layout
+- **Kanban board** — 5 columns (Backlog → Done), cross-column drag-and-drop and within-column reorder via @dnd-kit, drop placeholder, drag overlay
+- **Task cards** — priority badge, tag chips, assignee avatar, relative due date ("overdue" in red)
+- **Detail drawer** — right-side Sheet; edit title, status, priority, assignee, due date, tags, description; delete with confirmation dialog
+- **New task dialog** — form with title, description, status, priority, assignee (select from team), comma-separated tags
+- **Real-time toolbar filters** — search by title/description, multi-select priority chips, assignee avatar toggles, clear-all
+- **Team members** — 4 members (Alice Chen, Bob Martinez, Carol Kim, David Osei) referenced across all tasks
+- **Collapsible sidebar** — animates 240px ↔ 64px with Framer Motion; active nav highlight
+- **Dark / light / system theme** — persisted to localStorage, controls `documentElement.classList`
+- **Responsive layout** — horizontal scroll for Kanban on small screens
 
 ## Tech Stack
 
 | Layer | Library |
 |-------|---------|
 | Framework | React 19 + Vite + TypeScript (strict) |
-| Styling | Tailwind CSS v4 + shadcn/ui (New York style, base-ui) |
+| Styling | Tailwind CSS v4 + shadcn/ui (New York, base-ui) |
 | Animation | Framer Motion |
 | Drag & drop | @dnd-kit/core, @dnd-kit/sortable |
 | Charts | Recharts |
@@ -49,16 +52,15 @@ npm run dev
 ```
 src/
 ├── components/
-│   ├── layout/     AppShell, Sidebar, Header
-│   ├── common/     Shared app-level components (TBD)
-│   └── ui/         shadcn/ui primitives (Button, Avatar, DropdownMenu…)
+│   ├── layout/     AppShell, Sidebar, Header, DetailDrawer
+│   ├── common/     TaskCard
+│   └── ui/         shadcn/ui primitives
 ├── pages/
-│   ├── KanbanPage/       Placeholder — drag-and-drop board (upcoming)
-│   ├── AnalyticsPage/    Placeholder — Recharts dashboard (upcoming)
-│   └── SettingsPage/     Placeholder — user preferences (upcoming)
-├── stores/         Zustand stores: taskStore, uiStore, themeStore
-├── hooks/          Custom React hooks (TBD)
-├── data/           Mock seed data (5 sample tasks)
+│   ├── KanbanPage/       Board, columns, toolbar, new task dialog, sortable cards
+│   ├── AnalyticsPage/    Placeholder
+│   └── SettingsPage/     Placeholder
+├── stores/         taskStore (tasks + filters), uiStore (drawer), themeStore
+├── data/           mockTasks (18 tasks), members (4 team members)
 ├── lib/            types.ts, constants.ts, utils.ts
 └── styles/         Global CSS overrides
 ```

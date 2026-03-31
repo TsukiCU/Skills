@@ -1,4 +1,4 @@
-export type TaskStatus = "todo" | "in-progress" | "review" | "done"
+export type TaskStatus = "backlog" | "todo" | "in-progress" | "review" | "done"
 export type TaskPriority = "low" | "medium" | "high" | "urgent"
 
 export type Task = {
@@ -7,10 +7,17 @@ export type Task = {
   description: string
   status: TaskStatus
   priority: TaskPriority
-  assignee: string
+  assigneeId: string
   dueDate: string
   createdAt: string
   tags: string[]
+}
+
+export type TeamMember = {
+  id: string
+  name: string
+  avatar: string  // initials
+  color: string   // tailwind bg color class
 }
 
 export type Column = {
