@@ -99,7 +99,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             className="overflow-hidden whitespace-nowrap min-w-0"
           >
             <p className="text-sm font-medium text-sidebar-foreground leading-none">
-              Tsuki
+              Alice Chen
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">Admin</p>
           </motion.div>

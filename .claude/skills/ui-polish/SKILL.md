@@ -74,3 +74,20 @@ Even if the user didn't mention them, fix these when encountered:
 - Buttons without visible focus ring (`focus-visible:ring-2`)
 - Images without `alt` text
 - Color contrast below 4.5:1 for normal text
+
+### 6. Recharts-Specific Fixes
+When polishing Recharts charts, check for:
+- Missing `cursor` prop on Tooltip (should show subtle hover band)
+- Tooltip far from cursor: adjust `offset` prop (default 10-15px)
+- Black/unstyled bars: add `fill` prop using theme colors or per-entry data
+- No grid lines: add `<CartesianGrid strokeDasharray="3 3" />` with muted opacity
+- Hard-to-read axis labels: check `tick` fontSize, fill color for dark mode
+- Missing `animationDuration` on chart components (default 300-500ms)
+- Gradient fills: use `<defs><linearGradient>` with proper stop opacity
+
+### 7. Output Format
+After completing fixes, report in this format:
+- Issue category (from table above)
+- File changed
+- What was wrong → what was fixed
+- Dark mode verified: yes/no
