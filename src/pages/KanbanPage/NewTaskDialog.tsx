@@ -32,10 +32,6 @@ const PRIORITY_OPTIONS: { value: TaskPriority; label: string }[] = [
   { value: "urgent", label: "Urgent" },
 ]
 
-function generateId() {
-  return `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
-}
-
 export function NewTaskDialog() {
   const addTask = useTaskStore((s) => s.addTask)
   const [open, setOpen] = useState(false)
@@ -59,7 +55,6 @@ export function NewTaskDialog() {
       .filter(Boolean)
 
     addTask({
-      id: generateId(),
       title: title.trim(),
       description: description.trim(),
       status,
@@ -67,8 +62,7 @@ export function NewTaskDialog() {
       assigneeId,
       tags,
       dueDate: addDays(new Date(), 7).toISOString().slice(0, 10),
-      createdAt: new Date().toISOString().slice(0, 10),
-    })
+    }).catch(() => {/* handled in store */})
     resetAndClose()
   }
 

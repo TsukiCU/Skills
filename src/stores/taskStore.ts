@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import type { Task, TaskStatus, TaskPriority } from "@/lib/types"
-import { mockTasks } from "@/data/tasks"
 import { COLUMN_ORDER } from "@/lib/constants"
+import { api } from "@/lib/api"
 
 type KanbanFilters = {
   searchQuery: string
@@ -11,12 +11,17 @@ type KanbanFilters = {
 
 type TaskStore = KanbanFilters & {
   tasks: Task[]
+  loading: boolean
+  error: string | null
+
+  // Bootstrap
+  fetchTasks: () => Promise<void>
 
   // Mutations
-  addTask: (task: Task) => void
-  updateTask: (id: string, updates: Partial<Task>) => void
-  deleteTask: (id: string) => void
-  moveTask: (taskId: string, newStatus: TaskStatus, newIndex?: number) => void
+  addTask: (task: Omit<Task, "id" | "createdAt"> & { id?: string; createdAt?: string }) => Promise<void>
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>
+  deleteTask: (id: string) => Promise<void>
+  moveTask: (taskId: string, newStatus: TaskStatus, newIndex?: number) => Promise<void>
 
   // Filter setters
   setSearchQuery: (q: string) => void
@@ -29,36 +34,94 @@ type TaskStore = KanbanFilters & {
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
-  tasks: mockTasks,
+  tasks: [],
+  loading: false,
+  error: null,
   searchQuery: "",
   priorityFilter: [],
   assigneeFilter: [],
 
-  addTask: (task) =>
-    set((state) => ({ tasks: [...state.tasks, task] })),
+  fetchTasks: async () => {
+    set({ loading: true, error: null })
+    try {
+      const apiTasks = await api.tasks.list()
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const tasks: Task[] = apiTasks.map(({ sortOrder: _so, updatedAt: _ua, ...t }) => t)
+      set({ tasks, loading: false })
+    } catch (err) {
+      set({ error: String(err), loading: false })
+    }
+  },
 
-  updateTask: (id, updates) =>
+  addTask: async (taskInput) => {
+    const created = await api.tasks.create({
+      title: taskInput.title,
+      description: taskInput.description,
+      status: taskInput.status,
+      priority: taskInput.priority,
+      assigneeId: taskInput.assigneeId,
+      dueDate: taskInput.dueDate,
+      tags: taskInput.tags,
+    })
+    const task: Task = {
+      id: created.id,
+      title: created.title,
+      description: created.description,
+      status: created.status as TaskStatus,
+      priority: created.priority as TaskPriority,
+      assigneeId: created.assigneeId,
+      dueDate: created.dueDate,
+      tags: created.tags,
+      createdAt: created.createdAt,
+    }
+    set((state) => ({ tasks: [...state.tasks, task] }))
+  },
+
+  updateTask: async (id, updates) => {
+    // Optimistic update
     set((state) => ({
       tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-    })),
+    }))
+    try {
+      await api.tasks.update(id, {
+        ...(updates.title !== undefined && { title: updates.title }),
+        ...(updates.description !== undefined && { description: updates.description }),
+        ...(updates.status !== undefined && { status: updates.status }),
+        ...(updates.priority !== undefined && { priority: updates.priority }),
+        ...(updates.assigneeId !== undefined && { assigneeId: updates.assigneeId }),
+        ...(updates.dueDate !== undefined && { dueDate: updates.dueDate }),
+        ...(updates.tags !== undefined && { tags: updates.tags }),
+      })
+    } catch {
+      // Rollback — refetch
+      get().fetchTasks()
+    }
+  },
 
-  deleteTask: (id) =>
-    set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) })),
+  deleteTask: async (id) => {
+    // Optimistic delete
+    const prev = get().tasks
+    set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }))
+    try {
+      await api.tasks.delete(id)
+    } catch {
+      set({ tasks: prev })
+    }
+  },
 
-  moveTask: (taskId, newStatus, newIndex) =>
-    set((state) => {
-      const task = state.tasks.find((t) => t.id === taskId)
-      if (!task) return state
+  moveTask: async (taskId, newStatus, newIndex) => {
+    const state = get()
+    const task = state.tasks.find((t) => t.id === taskId)
+    if (!task) return
 
-      // Remove task from current position
-      const rest = state.tasks.filter((t) => t.id !== taskId)
-      const updated = { ...task, status: newStatus }
+    // Build new task list (optimistic)
+    const rest = state.tasks.filter((t) => t.id !== taskId)
+    const updated = { ...task, status: newStatus }
 
-      if (newIndex === undefined) {
-        return { tasks: [...rest, updated] }
-      }
-
-      // Insert at specific index within the target column
+    let newTasks: Task[]
+    if (newIndex === undefined) {
+      newTasks = [...rest, updated]
+    } else {
       const before = rest.filter(
         (t) => t.status === newStatus && rest.indexOf(t) < newIndex
       )
@@ -66,18 +129,27 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         (t) => t.status === newStatus && rest.indexOf(t) >= newIndex
       )
       const others = rest.filter((t) => t.status !== newStatus)
-
-      // Rebuild preserving global order: other columns in column order, then insert
-      const result: Task[] = []
+      newTasks = []
       for (const col of COLUMN_ORDER) {
         if (col === newStatus) {
-          result.push(...before, updated, ...after)
+          newTasks.push(...before, updated, ...after)
         } else {
-          result.push(...others.filter((t) => t.status === col))
+          newTasks.push(...others.filter((t) => t.status === col))
         }
       }
-      return { tasks: result }
-    }),
+    }
+
+    set({ tasks: newTasks })
+
+    // Persist to API in background (fire-and-forget with rollback)
+    const colTasks = newTasks.filter((t) => t.status === newStatus)
+    const sortOrder = colTasks.findIndex((t) => t.id === taskId)
+    try {
+      await api.tasks.move(taskId, newStatus, sortOrder)
+    } catch {
+      set({ tasks: state.tasks })
+    }
+  },
 
   setSearchQuery: (q) => set({ searchQuery: q }),
   setPriorityFilter: (priorities) => set({ priorityFilter: priorities }),

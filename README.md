@@ -25,9 +25,29 @@ A single-page project management dashboard built with React and TypeScript. Feat
 | Animation | Framer Motion |
 | Drag & drop | @dnd-kit/core, @dnd-kit/sortable |
 | Charts | Recharts |
-| State | Zustand (with persist middleware) |
+| State | Zustand |
 | Routing | React Router v7 |
-| Utilities | date-fns, Lucide React |
+| Backend | Hono + @hono/node-server |
+| Database | SQLite (better-sqlite3) + Drizzle ORM |
+| Utilities | date-fns, Lucide React, nanoid |
+
+## Backend Architecture
+
+```
+server/
+├── index.ts          — Hono app entry, CORS middleware, port 3001
+├── db/
+│   ├── schema.ts     — Drizzle table definitions (tasks, members, settings)
+│   ├── index.ts      — SQLite connection (taskflow.db)
+│   ├── migrate.ts    — Inline CREATE TABLE IF NOT EXISTS migrations
+│   └── seed.ts       — Seeds all mock data into the DB
+└── routes/
+    ├── tasks.ts      — GET/POST /api/tasks, GET/PATCH/DELETE /api/tasks/:id, PATCH /api/tasks/:id/move
+    ├── members.ts    — GET /api/members
+    └── settings.ts   — GET/PATCH /api/settings
+```
+
+Vite dev server proxies `/api` → `http://localhost:3001`. `npm run dev` starts both frontend and backend via `concurrently`.
 
 ## Quick Start
 
@@ -35,7 +55,8 @@ A single-page project management dashboard built with React and TypeScript. Feat
 git clone https://github.com/TsukiCU/Skills.git
 cd Skills
 npm install
-npm run dev
+npm run server:seed   # seed the SQLite database
+npm run dev           # starts both Vite (5173) and Hono server (3001)
 # open http://localhost:5173
 ```
 
@@ -43,7 +64,9 @@ npm run dev
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start dev server (port 5173) |
+| `npm run dev` | Start frontend (5173) + backend (3001) concurrently |
+| `npm run server` | Start backend only |
+| `npm run server:seed` | Seed SQLite database with mock data |
 | `npm run build` | Production build |
 | `npm run preview` | Preview production build |
 | `npm run lint` | ESLint check |

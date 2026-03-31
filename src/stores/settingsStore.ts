@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { api } from "@/lib/api"
 
 export type NotificationSettings = {
   emailTaskAssigned: boolean
@@ -25,45 +25,80 @@ type SettingsState = {
   notifications: NotificationSettings
   // Integrations
   integrations: Record<IntegrationId, IntegrationStatus>
+  // Loading
+  loaded: boolean
   // Actions
-  saveProfile: (data: { name: string; email: string; bio: string }) => void
-  saveAppearance: (data: { accentColor: string; fontSize: "sm" | "md" | "lg" }) => void
-  saveNotifications: (data: NotificationSettings) => void
-  toggleIntegration: (id: IntegrationId) => void
+  fetchSettings: () => Promise<void>
+  saveProfile: (data: { name: string; email: string; bio: string }) => Promise<void>
+  saveAppearance: (data: { accentColor: string; fontSize: "sm" | "md" | "lg" }) => Promise<void>
+  saveNotifications: (data: NotificationSettings) => Promise<void>
+  toggleIntegration: (id: IntegrationId) => Promise<void>
 }
 
-export const useSettingsStore = create<SettingsState>()(
-  persist(
-    (set) => ({
-      name: "Alice Chen",
-      email: "alice@taskflow.app",
-      bio: "Product manager & team lead. Building great products one task at a time.",
-      accentColor: "#14b8a6",
-      fontSize: "md",
-      notifications: {
-        emailTaskAssigned: true,
-        emailDeadlineReminders: true,
-        emailProjectUpdates: false,
-        pushNewComments: true,
-        pushStatusChanges: false,
-        desktopAll: true,
-      },
-      integrations: {
-        github: "connected",
-        slack: "disconnected",
-        notion: "disconnected",
-      },
-      saveProfile: (data) => set(data),
-      saveAppearance: (data) => set(data),
-      saveNotifications: (data) => set({ notifications: data }),
-      toggleIntegration: (id) =>
-        set((s) => ({
-          integrations: {
-            ...s.integrations,
-            [id]: s.integrations[id] === "connected" ? "disconnected" : "connected",
-          },
-        })),
-    }),
-    { name: "taskflow-settings" }
-  )
-)
+const DEFAULT_NOTIFICATIONS: NotificationSettings = {
+  emailTaskAssigned: true,
+  emailDeadlineReminders: true,
+  emailProjectUpdates: false,
+  pushNewComments: true,
+  pushStatusChanges: false,
+  desktopAll: true,
+}
+
+export const useSettingsStore = create<SettingsState>()((set, get) => ({
+  name: "Alice Chen",
+  email: "alice@taskflow.app",
+  bio: "Product manager & team lead. Building great products one task at a time.",
+  accentColor: "#14b8a6",
+  fontSize: "md",
+  notifications: DEFAULT_NOTIFICATIONS,
+  integrations: {
+    github: "connected",
+    slack: "disconnected",
+    notion: "disconnected",
+  },
+  loaded: false,
+
+  fetchSettings: async () => {
+    try {
+      const data = await api.settings.get()
+      set({
+        name: data.name,
+        email: data.email,
+        bio: data.bio,
+        accentColor: data.accentColor,
+        fontSize: data.fontSize as "sm" | "md" | "lg",
+        notifications: data.notifications as NotificationSettings,
+        integrations: data.integrations as Record<IntegrationId, IntegrationStatus>,
+        loaded: true,
+      })
+    } catch {
+      // Fallback to defaults if API unavailable
+      set({ loaded: true })
+    }
+  },
+
+  saveProfile: async (data) => {
+    set(data)
+    await api.settings.update(data)
+  },
+
+  saveAppearance: async (data) => {
+    set(data)
+    await api.settings.update(data)
+  },
+
+  saveNotifications: async (data) => {
+    set({ notifications: data })
+    await api.settings.update({ notifications: data })
+  },
+
+  toggleIntegration: async (id) => {
+    const current = get().integrations
+    const next: Record<IntegrationId, IntegrationStatus> = {
+      ...current,
+      [id]: current[id] === "connected" ? "disconnected" : "connected",
+    }
+    set({ integrations: next })
+    await api.settings.update({ integrations: next })
+  },
+}))

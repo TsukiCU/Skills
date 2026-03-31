@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle2, Clock, AlertTriangle, BarChart3 } from "lucide-react"
 import { isPast, parseISO, isToday } from "date-fns"
@@ -139,7 +139,10 @@ function ChartCard({ title, children, delay }: ChartCardProps) {
 
 export function AnalyticsPage() {
   const tasks = useTaskStore((s) => s.tasks)
+  const fetchTasks = useTaskStore((s) => s.fetchTasks)
   const [trendRange, setTrendRange] = useState<TrendRange>("8W")
+
+  useEffect(() => { fetchTasks() }, [fetchTasks])
 
   const stats = useMemo(() => {
     const total = tasks.length

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   DndContext,
   DragOverlay,
@@ -19,8 +19,10 @@ import { KanbanColumn } from "./KanbanColumn"
 import { KanbanToolbar } from "./KanbanToolbar"
 
 export function KanbanPage() {
-  const { tasks, moveTask, getFilteredTasksByStatus } = useTaskStore()
+  const { tasks, moveTask, getFilteredTasksByStatus, fetchTasks } = useTaskStore()
   const [activeId, setActiveId] = useState<string | null>(null)
+
+  useEffect(() => { fetchTasks() }, [fetchTasks])
 
   const filteredByStatus = getFilteredTasksByStatus()
   const activeTask = tasks.find((t) => t.id === activeId) ?? null

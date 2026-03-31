@@ -195,6 +195,22 @@ export function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [savedFeedback, setSavedFeedback] = useState(false)
 
+  // Fetch settings from API on mount and sync draft
+  useEffect(() => {
+    settings.fetchSettings().then(() => {
+      const s = useSettingsStore.getState()
+      setDraft({
+        name: s.name,
+        email: s.email,
+        bio: s.bio,
+        accentColor: s.accentColor,
+        fontSize: s.fontSize,
+        notifications: { ...s.notifications },
+      })
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // ── Dirty check ──
   const isDirty =
     draft.name !== settings.name ||
@@ -229,10 +245,11 @@ export function SettingsPage() {
       return
     }
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 500))
-    settings.saveProfile({ name: draft.name, email: draft.email, bio: draft.bio })
-    settings.saveAppearance({ accentColor: draft.accentColor, fontSize: draft.fontSize })
-    settings.saveNotifications(draft.notifications)
+    await Promise.all([
+      settings.saveProfile({ name: draft.name, email: draft.email, bio: draft.bio }),
+      settings.saveAppearance({ accentColor: draft.accentColor, fontSize: draft.fontSize }),
+      settings.saveNotifications(draft.notifications),
+    ])
     setSaving(false)
     setSavedFeedback(true)
   }
