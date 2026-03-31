@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { motion } from "framer-motion"
 import { CheckCircle2, Clock, AlertTriangle, BarChart3 } from "lucide-react"
 import { isPast, parseISO, isToday } from "date-fns"
@@ -14,6 +14,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  LabelList,
   ResponsiveContainer,
 } from "recharts"
 import { useTaskStore } from "@/stores/taskStore"
@@ -21,6 +22,7 @@ import { MEMBERS } from "@/data/members"
 import { COLUMN_ORDER, TASK_STATUSES } from "@/lib/constants"
 import { weeklyCompletionData } from "@/data/analytics"
 import type { TaskPriority, TaskStatus } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const STATUS_HEX: Record<TaskStatus, string> = {
   backlog: "#a1a1aa",
@@ -37,6 +39,14 @@ const PRIORITY_HEX: Record<TaskPriority, string> = {
   low: "#a1a1aa",
 }
 
+// Member hex colors mapped from their Tailwind bg- classes
+const MEMBER_HEX: Record<string, string> = {
+  "member-1": "#14b8a6", // teal-500
+  "member-2": "#8b5cf6", // violet-500
+  "member-3": "#f43f5e", // rose-500
+  "member-4": "#f59e0b", // amber-500
+}
+
 const PRIORITY_ORDER: TaskPriority[] = ["urgent", "high", "medium", "low"]
 const PRIORITY_LABELS: Record<TaskPriority, string> = {
   urgent: "Urgent",
@@ -45,8 +55,21 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
   low: "Low",
 }
 
+const TOOLTIP_STYLE = {
+  backgroundColor: "hsl(var(--card))",
+  border: "1px solid hsl(var(--border))",
+  borderRadius: "6px",
+  fontSize: "12px",
+  color: "hsl(var(--foreground))",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
+}
+
+type TrendRange = "4W" | "8W" | "All"
+
 type StatCardProps = {
   icon: React.ReactNode
+  iconBg: string
+  iconColor: string
   label: string
   value: string | number
   trend: string
@@ -54,13 +77,14 @@ type StatCardProps = {
   delay: number
 }
 
-function StatCard({ icon, label, value, trend, trendColor = "text-muted-foreground", delay }: StatCardProps) {
+function StatCard({ icon, iconBg, iconColor, label, value, trend, trendColor = "text-muted-foreground", delay }: StatCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
       transition={{ duration: 0.3, delay, ease: "easeOut" }}
-      className="rounded-lg border border-border bg-card p-5 shadow-sm"
+      className="rounded-lg border border-border bg-card p-5 shadow-sm hover:shadow-md transition-shadow cursor-default"
     >
       <div className="flex items-start justify-between">
         <div>
@@ -68,7 +92,7 @@ function StatCard({ icon, label, value, trend, trendColor = "text-muted-foregrou
           <p className="mt-1 text-3xl font-bold font-heading tracking-tight">{value}</p>
           <p className={`mt-1 text-xs ${trendColor}`}>{trend}</p>
         </div>
-        <div className="rounded-md bg-primary/10 p-2 text-primary">{icon}</div>
+        <div className={cn("rounded-full p-2.5", iconBg, iconColor)}>{icon}</div>
       </div>
     </motion.div>
   )
@@ -86,7 +110,7 @@ function ChartCard({ title, children, delay }: ChartCardProps) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay, ease: "easeOut" }}
-      className="rounded-lg border border-border bg-card p-6 shadow-sm"
+      className="rounded-lg border border-border bg-card p-6 shadow-sm hover:shadow-md transition-shadow"
     >
       <h3 className="mb-4 text-sm font-semibold text-foreground">{title}</h3>
       {children}
@@ -96,6 +120,7 @@ function ChartCard({ title, children, delay }: ChartCardProps) {
 
 export function AnalyticsPage() {
   const tasks = useTaskStore((s) => s.tasks)
+  const [trendRange, setTrendRange] = useState<TrendRange>("8W")
 
   const stats = useMemo(() => {
     const total = tasks.length
@@ -134,21 +159,25 @@ export function AnalyticsPage() {
         fullName: m.name,
         avatar: m.avatar,
         tasks: tasks.filter((t) => t.assigneeId === m.id).length,
+        color: MEMBER_HEX[m.id] ?? "#a1a1aa",
       })),
     [tasks]
   )
 
+  const trendData = useMemo(() => {
+    if (trendRange === "4W") return weeklyCompletionData.slice(-4)
+    if (trendRange === "8W") return weeklyCompletionData.slice(-8)
+    return weeklyCompletionData
+  }, [trendRange])
+
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold font-heading">Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Project health and team performance</p>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={<BarChart3 className="h-4 w-4" />}
+          iconBg="bg-teal-100 dark:bg-teal-900/40"
+          iconColor="text-teal-600 dark:text-teal-400"
           label="Total Tasks"
           value={stats.total}
           trend="↑12% vs last week"
@@ -157,6 +186,8 @@ export function AnalyticsPage() {
         />
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4" />}
+          iconBg="bg-emerald-100 dark:bg-emerald-900/40"
+          iconColor="text-emerald-600 dark:text-emerald-400"
           label="Completed"
           value={stats.completed}
           trend={`${stats.completionPct}% of total`}
@@ -165,6 +196,8 @@ export function AnalyticsPage() {
         />
         <StatCard
           icon={<AlertTriangle className="h-4 w-4" />}
+          iconBg={stats.overdue > 0 ? "bg-red-100 dark:bg-red-900/40" : "bg-zinc-100 dark:bg-zinc-800"}
+          iconColor={stats.overdue > 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}
           label="Overdue"
           value={stats.overdue}
           trend={stats.overdue > 0 ? "Needs attention" : "All on track"}
@@ -173,6 +206,8 @@ export function AnalyticsPage() {
         />
         <StatCard
           icon={<Clock className="h-4 w-4" />}
+          iconBg="bg-sky-100 dark:bg-sky-900/40"
+          iconColor="text-sky-600 dark:text-sky-400"
           label="Avg Completion"
           value="4.2 days"
           trend="−0.8 days vs last month"
@@ -201,13 +236,9 @@ export function AnalyticsPage() {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  color: "hsl(var(--foreground))",
-                }}
+                contentStyle={TOOLTIP_STYLE}
+                offset={8}
+                wrapperStyle={{ outline: "none" }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -223,15 +254,34 @@ export function AnalyticsPage() {
 
         {/* Weekly Completion Trend */}
         <ChartCard title="Weekly Completion Trend" delay={0.25}>
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={weeklyCompletionData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+          {/* Range selector */}
+          <div className="flex gap-1 mb-3">
+            {(["4W", "8W", "All"] as TrendRange[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setTrendRange(r)}
+                aria-pressed={trendRange === r}
+                className={cn(
+                  "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  trendRange === r
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <defs>
                 <linearGradient id="completedGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} vertical={false} />
               <XAxis
                 dataKey="week"
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
@@ -245,14 +295,10 @@ export function AnalyticsPage() {
                 allowDecimals={false}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  color: "hsl(var(--foreground))",
-                }}
+                contentStyle={TOOLTIP_STYLE}
                 labelStyle={{ color: "hsl(var(--foreground))" }}
+                offset={8}
+                wrapperStyle={{ outline: "none" }}
               />
               <Area
                 type="monotone"
@@ -275,7 +321,7 @@ export function AnalyticsPage() {
               layout="vertical"
               margin={{ top: 0, right: 12, bottom: 0, left: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} horizontal={false} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
@@ -292,16 +338,12 @@ export function AnalyticsPage() {
                 width={52}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px",
-                  fontSize: "12px",
-                  color: "hsl(var(--foreground))",
-                }}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
+                contentStyle={TOOLTIP_STYLE}
+                cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                offset={8}
+                wrapperStyle={{ outline: "none" }}
               />
-              <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24}>
+              <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={24} background={{ fill: "transparent" }}>
                 {priorityData.map((entry) => (
                   <Cell key={entry.name} fill={entry.color} />
                 ))}
@@ -316,9 +358,9 @@ export function AnalyticsPage() {
             <BarChart
               data={workloadData}
               layout="vertical"
-              margin={{ top: 0, right: 12, bottom: 0, left: 8 }}
+              margin={{ top: 0, right: 32, bottom: 0, left: 8 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.6} horizontal={false} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
@@ -339,24 +381,26 @@ export function AnalyticsPage() {
                   if (!active || !payload?.length) return null
                   const d = workloadData.find((w) => w.name === payload[0].payload.name)
                   return (
-                    <div
-                      style={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "6px",
-                        padding: "6px 10px",
-                        fontSize: "12px",
-                        color: "hsl(var(--foreground))",
-                      }}
-                    >
+                    <div style={TOOLTIP_STYLE} className="px-2.5 py-1.5">
                       <p className="font-medium">{d?.fullName}</p>
                       <p className="text-muted-foreground">{payload[0].value} tasks</p>
                     </div>
                   )
                 }}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
+                cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+                offset={8}
+                wrapperStyle={{ outline: "none" }}
               />
-              <Bar dataKey="tasks" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} maxBarSize={24} opacity={0.85} />
+              <Bar dataKey="tasks" radius={[0, 4, 4, 0]} maxBarSize={24}>
+                {workloadData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.color} />
+                ))}
+                <LabelList
+                  dataKey="tasks"
+                  position="right"
+                  style={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
