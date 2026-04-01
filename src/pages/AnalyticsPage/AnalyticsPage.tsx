@@ -97,8 +97,10 @@ type StatCardProps = {
 }
 
 function StatCard({ icon, iconBg, iconColor, label, value, trend, trendColor = "text-muted-foreground", delay }: StatCardProps) {
+  const testId = `stat-card-${label.toLowerCase().replace(/\s+/g, "-")}`
   return (
     <motion.div
+      data-testid={testId}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
@@ -124,8 +126,10 @@ type ChartCardProps = {
 }
 
 function ChartCard({ title, children, delay }: ChartCardProps) {
+  const testId = `chart-card-${title.toLowerCase().replace(/\s+/g, "-")}`
   return (
     <motion.div
+      data-testid={testId}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay, ease: "easeOut" }}
@@ -284,6 +288,7 @@ export function AnalyticsPage() {
             {(["4W", "8W", "All"] as TrendRange[]).map((r) => (
               <button
                 key={r}
+                data-testid={`trend-range-${r.toLowerCase()}`}
                 onClick={() => setTrendRange(r)}
                 aria-pressed={trendRange === r}
                 className={cn(

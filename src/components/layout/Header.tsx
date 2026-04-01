@@ -58,6 +58,7 @@ export function Header() {
         {/* Theme toggle */}
         <DropdownMenu>
           <DropdownMenuTrigger
+            data-testid="theme-toggle"
             aria-label="Toggle theme"
             className={cn(
               "inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground",
@@ -74,6 +75,7 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
+              data-testid="theme-option-light"
               onClick={() => setTheme("light")}
               className={theme === "light" ? "text-primary font-medium" : ""}
             >
@@ -81,6 +83,7 @@ export function Header() {
               Light
             </DropdownMenuItem>
             <DropdownMenuItem
+              data-testid="theme-option-dark"
               onClick={() => setTheme("dark")}
               className={theme === "dark" ? "text-primary font-medium" : ""}
             >
@@ -88,6 +91,7 @@ export function Header() {
               Dark
             </DropdownMenuItem>
             <DropdownMenuItem
+              data-testid="theme-option-system"
               onClick={() => setTheme("system")}
               className={theme === "system" ? "text-primary font-medium" : ""}
             >

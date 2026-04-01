@@ -76,7 +76,9 @@ npm run dev           # starts both Vite (5173) and Hono server (3001)
 
 ## E2E Testing
 
-Playwright tests cover the core Kanban CRUD flows. Both servers must be running (or the `webServer` config will start them automatically).
+Playwright tests cover Kanban CRUD, navigation, analytics rendering, and settings interactions. Both servers must be running (or the `webServer` config will start them automatically).
+
+For full details see **[docs/TESTING.md](docs/TESTING.md)**.
 
 ```bash
 # Run all E2E tests
@@ -87,18 +89,21 @@ npm run test:e2e:ui
 
 # Run a single spec
 npx playwright test e2e/kanban.spec.ts
+
+# View HTML report
+npx playwright show-report
 ```
 
-**Test coverage in `e2e/kanban.spec.ts`:**
-- Create task: opens dialog, fills title + priority, submits, verifies card appears in column
-- Validation: empty title shows error, dialog stays open
-- Read: seeded task counts per column, search filter, priority filter toggle
-- Update priority: opens drawer, changes priority chip, card badge updates
-- Update status: moves task to different column via status chip
-- Delete: confirms deletion, task removed, count decremented
-- Cancel delete: dialog dismissed, task count unchanged
+**Test files (33 tests total):**
 
-**Test isolation:** each test calls `POST /api/seed-reset` to restore the DB to known seed state before running.
+| File | Tests | What it covers |
+|------|-------|---------------|
+| `e2e/kanban.spec.ts` | 10 | Kanban CRUD — create, read, search, filter, update, delete |
+| `e2e/navigation.spec.ts` | 7 | Sidebar routing, collapse/expand, theme toggle |
+| `e2e/analytics.spec.ts` | 6 | Stat cards, chart rendering, trend range selector |
+| `e2e/settings.spec.ts` | 10 | Tab nav, profile save, notification toggles, theme, persistence |
+
+**Test isolation:** Kanban tests call `POST /api/seed-reset` before each test to restore the DB to a known seed state.
 
 ## Project Structure
 

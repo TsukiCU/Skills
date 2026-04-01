@@ -95,6 +95,7 @@ function Toggle({ checked, onChange, id, "aria-label": ariaLabel }: ToggleProps)
   return (
     <button
       id={id}
+      data-testid={id ? `toggle-${id}` : undefined}
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
@@ -300,6 +301,7 @@ export function SettingsPage() {
           <FieldGroup label="Full Name" htmlFor="s-name">
             <Input
               id="s-name"
+              data-testid="settings-name-input"
               value={draft.name}
               onChange={(e) => patchDraft({ name: e.target.value })}
               placeholder="Your full name"
@@ -367,6 +369,7 @@ export function SettingsPage() {
             {themeOptions.map((opt) => (
               <button
                 key={opt.value}
+                data-testid={`settings-theme-${opt.value}`}
                 onClick={() => setTheme(opt.value)}
                 aria-label={`Switch to ${opt.label} theme`}
                 className={cn(
@@ -645,6 +648,7 @@ export function SettingsPage() {
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              data-testid={`settings-tab-${id}`}
               onClick={() => setActiveTab(id)}
               aria-current={activeTab === id ? "page" : undefined}
               className={cn(
@@ -716,12 +720,12 @@ export function SettingsPage() {
           >
             <div className="flex items-center gap-2 text-sm">
               {savedFeedback ? (
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                <span data-testid="settings-saved-feedback" className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium">
                   <CheckCircle2 className="h-4 w-4" />
                   Changes saved
                 </span>
               ) : (
-                <span className="text-muted-foreground">
+                <span data-testid="settings-unsaved-bar" className="text-muted-foreground">
                   You have unsaved changes
                 </span>
               )}
@@ -731,6 +735,7 @@ export function SettingsPage() {
                 <Button
                   size="sm"
                   variant="outline"
+                  data-testid="settings-discard-btn"
                   onClick={handleDiscard}
                   disabled={saving}
                 >
@@ -738,6 +743,7 @@ export function SettingsPage() {
                 </Button>
                 <Button
                   size="sm"
+                  data-testid="settings-save-btn"
                   onClick={handleSave}
                   disabled={saving}
                   className="gap-1.5 min-w-[80px]"
